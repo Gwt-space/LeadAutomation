@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import os
 
 app = Flask(__name__)
+load_dotenv()
 
 # ==== CONFIG ====
 VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")
@@ -22,6 +23,10 @@ ADMIN_PHONE = os.getenv("ADMIN_PHONE")
 # WhatsApp Recipients
 CLIENT_PHONE = os.getenv("CLIENT_PHONE")
 MY_PHONE = os.getenv("MY_PHONE")
+
+@app.route('/')
+def index():
+    return "✅ Webhook service is live!"
 
 @app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
