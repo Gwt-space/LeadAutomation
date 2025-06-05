@@ -141,8 +141,12 @@ def send_whatsapp_message(to_number, lead_data):
 
 
 
-if __name__ == '__main__':
-    # Only for local development
-    app.run(debug=True, host='0.0.0.0', port=5000)
+# if __name__ == '__main__':
+#     # Only for local development
+#     app.run(debug=True, host='0.0.0.0', port=5000)
 
+if __name__ == '__main__':
+    # Use PORT environment variable (Render provides it), default to 5000 locally
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
 
