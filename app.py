@@ -139,6 +139,13 @@ def send_whatsapp_message(to_number, lead_data):
     response = requests.post(url, headers=headers, json=payload)
     print("📲 WhatsApp send response:", response.status_code, response.text)
 
+# privacy policy
+
+from flask import send_from_directory
+
+@app.route('/privacypolicy')
+def privacy_policy():
+    return send_from_directory('static', 'privacypolicy.txt')
 
 
 # if __name__ == '__main__':
