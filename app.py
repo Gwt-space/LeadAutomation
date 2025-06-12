@@ -6,8 +6,23 @@ from google.oauth2.service_account import Credentials
 from dotenv import load_dotenv
 import os
 
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+import os
+
+
 app = Flask(__name__)
 load_dotenv()
+
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+
+class Lead(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    phone = db.Column(db.String(20))
 
 # ==== CONFIG ====
 VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")
@@ -110,6 +125,91 @@ def notify_on_whatsapp(lead_data):
     send_whatsapp_message(MY_PHONE, formatted_data)
 
 
+# PAGE_ROUTING = {
+#     "1234567890": {
+#         "sheet_name": os.getenv("PAGE_1234567890_SHEET"),
+#         "client_phone": os.getenv("PAGE_1234567890_PHONE")
+#     },
+#     "2345678901": {
+#         "sheet_name": os.getenv("PAGE_2345678901_SHEET"),
+#         "client_phone": os.getenv("PAGE_2345678901_PHONE")
+#     }
+# }
+
+# # ==== Updated webhook ====
+# @app.route('/webhook', methods=['GET', 'POST'])
+# def webhook():
+#     if request.method == 'GET':
+#         token = request.args.get("hub.verify_token")
+#         challenge = request.args.get("hub.challenge")
+#         if token == VERIFY_TOKEN:
+#             return challenge, 200
+#         return "Unauthorized", 403
+
+#     if request.method == 'POST':
+#         data = request.get_json(force=True)
+#         print("🔔 Received webhook payload:")
+#         print(json.dumps(data, indent=2))
+
+#         if data and data.get("entry"):
+#             for entry in data["entry"]:
+#                 page_id = entry.get("id")
+#                 route = PAGE_ROUTING.get(page_id)
+
+#                 if not route:
+#                     print(f"❌ No routing found for page_id: {page_id}")
+#                     continue
+
+#                 for change in entry.get("changes", []):
+#                     value = change.get("value", {})
+#                     lead_id = value.get("leadgen_id")
+#                     print(f"📌 Lead ID: {lead_id}")
+
+#                     if "field_data" in value:
+#                         answers = value["field_data"]
+#                         lead_data = {field["name"]: field["values"][0] for field in answers}
+#                     else:
+#                         lead_data = get_lead_data(lead_id)
+
+#                     if lead_data:
+#                         save_to_google_sheet(lead_data, route['sheet_name'])
+#                         notify_on_whatsapp(lead_data, route['client_phone'])
+
+#         return "EVENT_RECEIVED", 200
+
+# # ==== Updated Google Sheets function ====
+# def save_to_google_sheet(lead_data, sheet_name):
+#     try:
+#         scope = [
+#             "https://www.googleapis.com/auth/spreadsheets",
+#             "https://www.googleapis.com/auth/drive",
+#         ]
+#         creds = Credentials.from_service_account_file(GOOGLE_CREDS_FILE, scopes=scope)
+#         client = gspread.authorize(creds)
+#         sheet = client.open(sheet_name).sheet1
+
+#         row = [
+#             lead_data.get("full_name", ""),
+#             lead_data.get("email", ""),
+#             lead_data.get("phone_number", "")
+#         ]
+#         sheet.append_row(row)
+#         print(f"📤 Lead saved to Google Sheet: {sheet_name}")
+#     except Exception as e:
+#         print("❌ Error saving to Google Sheets:", str(e))
+
+# # ==== Updated WhatsApp notifier ====
+# def notify_on_whatsapp(lead_data, client_number):
+    formatted_data = {
+        "name": lead_data.get("full_name", ""),
+        "email": lead_data.get("email", ""),
+        "phone": lead_data.get("phone_number", "")
+    }
+
+    send_whatsapp_message(client_number, formatted_data)
+    send_whatsapp_message(MY_PHONE, formatted_data)
+
+
 def send_whatsapp_message(to_number, lead_data):
     url = f"https://graph.facebook.com/v19.0/{PHONE_NUMBER_ID}/messages"
     headers = {
@@ -155,7 +255,7 @@ def privacy():
             <h1>Privacy Policy</h1>
             <p>This app collects lead data (name, email, phone) from Meta Lead Ads and sends WhatsApp notifications.</p>
             <p>Data is not shared or stored beyond the immediate usage for communication.</p>
-            <p>Contact us for concerns: example@example.com</p>
+            <p>Contact us for concerns: jeyagwt@gmail.com</p>
         </body>
     </html>
     """
